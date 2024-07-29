@@ -25,7 +25,7 @@ struct Args {
     password: Option<String>,
 
     /// Connect string to connect with. Takes precedence over `data_source_name`, `username`, `password`.
-    #[arg(short, long = "uri")]
+    #[arg(short, long = "conn")]
     connection_string: Option<String>,
 
     /// Query to execute
@@ -44,14 +44,12 @@ fn main() -> Result<(), OdbcCliError> {
     let out = stdout();
     let mut writer = csv::Writer::from_writer(out);
 
-    // If you do not do anything fancy it is recommended to have only one Environment in the
-    // entire process.
     let environment = Environment::new()?;
     if args.connection_string.is_none()
         && (args.data_source_name.is_none() || args.username.is_none() || args.password.is_none())
     {
         eprintln!(
-            "Provide either `--uri` or all of `--data_source_name`, `--username`, `--password`"
+            "Provide either `--conn` or all of `--data_source_name`, `--username`, `--password`"
         );
         return Err(clap::Error::new(clap::error::ErrorKind::ValueValidation).into());
     }
@@ -74,7 +72,7 @@ fn main() -> Result<(), OdbcCliError> {
         Some(_params) => serde_json::from_str(_params.as_str())?,
     };
 
-    // Execute a one of query without any parameters.
+    // most of the following from https://docs.rs/odbc-api/8.1.2/odbc_api/guide/index.html
     match connection.execute(args.query.as_str(), params)? {
         Some(mut cursor) => {
             // Write the column names to stdout

@@ -5,11 +5,21 @@ Database abstracted CLI—using Open Database Connectivity (ODBC)—intended for
 
 ## Usage
 
+### Example
+
 Start an ODBC compatible database. For example, PostgreSQL with `docker`:
 
     docker run -p 5432:5432 -e POSTGRES_USER=rest_user -e POSTGRES_PASSWORD=rest_pass -e POSTGRES_DB=rest_db postgres:alpine
 
 (which will start and initialise a new PostgreSQL instance accessible via connection string `postgresql://rest_user:rest_pass@127.0.0.1:5432/rest_db`)
+
+Then you can run Start an ODBC compatible database. For example, PostgreSQL with `docker`:
+
+    odbc-cli \
+        --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
+        -q "SELECT atan(1)*4 AS pi"
+
+---
 
 ### `--help`
 
@@ -24,7 +34,7 @@ Start an ODBC compatible database. For example, PostgreSQL with `docker`:
               Username to connect as
       -P, --password <PASSWORD>
               Password to connect with
-      -c, --uri <CONNECTION_STRING>
+      -c, --conn <CONNECTION_STRING>
               Connect string to connect with. Takes precedence over `data_source_name`, `username`, `password`
       -q, --query <QUERY>
               Query to execute
