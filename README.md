@@ -13,7 +13,7 @@ Start an ODBC compatible database. For example, PostgreSQL with `docker`:
 
 (which will start and initialise a new PostgreSQL instance accessible via connection string `postgresql://rest_user:rest_pass@127.0.0.1:5432/rest_db`)
 
-Then you can run Start an ODBC compatible database. For example, PostgreSQL with `docker`:
+Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
 
     odbc-cli \
         --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
