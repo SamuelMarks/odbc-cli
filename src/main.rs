@@ -1,13 +1,61 @@
-pub mod error;
+mod error;
 
-use crate::error::OdbcCliError;
-use clap::Parser;
-use odbc_api::{buffers::TextRowSet, ConnectionOptions, Cursor, Environment, ResultSetMetadata};
-use std::io::stdout;
+use clap::{Parser, ValueEnum};
 
-/// Maximum number of rows fetched with one row set. Fetching batches of rows is usually much
-/// faster than fetching individual rows.
-const BATCH_SIZE: usize = 5000;
+use crate::error::OdbcSecretsCliError;
+
+// #[repr(C)]
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
+enum SecretStoreEngine {
+    #[default]
+    VAULT,
+    INFISICAL,
+}
+
+impl SecretStoreEngine {
+    /// Report all `possible_values`
+    pub fn possible_values() -> impl Iterator<Item = clap::builder::PossibleValue> {
+        Self::value_variants()
+            .iter()
+            .filter_map(clap::ValueEnum::to_possible_value)
+    }
+}
+
+impl std::fmt::Display for SecretStoreEngine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.to_possible_value()
+            .expect("no values are skipped")
+            .get_name()
+            .fmt(f)
+    }
+}
+
+impl std::str::FromStr for SecretStoreEngine {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        for variant in Self::value_variants() {
+            if variant.to_possible_value().unwrap().matches(s, false) {
+                return Ok(*variant);
+            }
+        }
+        Err(format!("invalid variant: {s}"))
+    }
+}
+
+impl clap::ValueEnum for SecretStoreEngine {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::INFISICAL, Self::VAULT]
+    }
+
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        Some(match self {
+            Self::INFISICAL => clap::builder::PossibleValue::new("infisical"),
+            Self::VAULT => clap::builder::PossibleValue::new("vault"),
+        })
+    }
+}
+
 /// CLI for basic CRUD across many databases using ODBC
 #[derive(clap::Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -35,72 +83,61 @@ struct Args {
     /// Parameters to provide sanitarily to SQL query `--query`
     #[arg(short, long)]
     params: Option<String>,
+
+    /// Secret storage service engine name
+    #[arg(long, default_value_t=SecretStoreEngine::default())]
+    secret_store_engine: SecretStoreEngine,
+
+    /// Secret storage service address
+    #[arg(short, long, env = "VAULT_ADDR")]
+    address: Option<String>,
+
+    /// Secret storage Certificate Authority (CA) certificate
+    #[arg(long, env = "VAULT_CACERT")]
+    ca_cert: Option<String>,
+
+    /// Secret storage CA path
+    #[arg(long, env = "VAULT_CAPATH")]
+    ca_path: Option<String>,
+
+    /// Secret storage client certificate
+    #[arg(long, env = "VAULT_CLIENT_CERT")]
+    client_cert: Option<String>,
+
+    /// Secret storage client key
+    #[arg(long, env = "VAULT_CLIENT_KEY")]
+    client_key: Option<String>,
+
+    /// Whether to skip verification on secret storage
+    #[arg(long, env = "VAULT_SKIP_VERIFY")]
+    skip_verify: Option<bool>,
+
+    /// Secret storage service vault token
+    #[arg(long, env = "VAULT_TOKEN")]
+    token: Option<String>,
 }
 
-fn main() -> Result<(), OdbcCliError> {
+fn main() -> Result<(), OdbcSecretsCliError> {
     let args = Args::parse();
-
-    // Write csv to standard out
-    let out = stdout();
-    let mut writer = csv::Writer::from_writer(out);
-
-    let environment = Environment::new()?;
     if args.connection_string.is_none()
         && (args.data_source_name.is_none() || args.username.is_none() || args.password.is_none())
     {
+        /*odbc_secrets_lib::secrets::vault_openbao::connect(
+            env::var("VAULT_ADDR")
+        )*/
+
         eprintln!(
             "Provide either `--conn` or all of `--data_source_name`, `--username`, `--password`"
         );
         return Err(clap::Error::new(clap::error::ErrorKind::ValueValidation).into());
     }
 
-    let connection = if args.connection_string.is_none() {
-        environment.connect(
-            args.data_source_name.unwrap().as_str(),
-            args.username.unwrap().as_str(),
-            args.password.unwrap().as_str(),
-            ConnectionOptions::default(),
-        )
-    } else {
-        environment.connect_with_connection_string(
-            args.connection_string.unwrap().as_str(),
-            ConnectionOptions::default(),
-        )
-    }?;
-    let params = match args.params {
-        None => (),
-        Some(_params) => serde_json::from_str(_params.as_str())?,
-    };
-
-    // most of the following from https://docs.rs/odbc-api/8.1.2/odbc_api/guide/index.html
-    match connection.execute(args.query.as_str(), params)? {
-        Some(mut cursor) => {
-            // Write the column names to stdout
-            let headline: Vec<String> = cursor.column_names()?.collect::<Result<_, _>>()?;
-            writer.write_record(headline)?;
-
-            // Use schema in cursor to initialize a text buffer large enough to hold the largest
-            // possible strings for each column up to an upper limit of 4KiB.
-            let mut buffers = TextRowSet::for_cursor(BATCH_SIZE, &mut cursor, Some(4096))?;
-            // Bind the buffer to the cursor. It is now being filled with every call to fetch.
-            let mut row_set_cursor = cursor.bind_buffer(&mut buffers)?;
-
-            // Iterate over batches
-            while let Some(batch) = row_set_cursor.fetch()? {
-                // Within a batch, iterate over every row
-                for row_index in 0..batch.num_rows() {
-                    // Within a row iterate over every column
-                    let record = (0..batch.num_cols())
-                        .map(|col_index| batch.at(col_index, row_index).unwrap_or(&[]));
-                    // Writes row as csv
-                    writer.write_record(record)?;
-                }
-            }
-        }
-        None => {
-            eprintln!("Query came back empty. No output has been created.");
-        }
-    }
-
-    Ok(())
+    Ok(odbc_secrets_lib::odbc_runner::odbc_runner(
+        args.connection_string,
+        args.data_source_name,
+        args.username,
+        args.password,
+        args.params,
+        args.query,
+    )?)
 }

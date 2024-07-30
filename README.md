@@ -19,7 +19,17 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
         --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
         -q "SELECT atan(1)*4 AS pi"
 
----
+### Vault / OpenBao
+
+#### Environment variables
+
+  - `VAULT_ADDR`
+  - `VAULT_CACERT`
+  - `VAULT_CAPATH`
+  - `VAULT_CLIENT_CERT`
+  - `VAULT_CLIENT_KEY`
+  - `VAULT_SKIP_VERIFY`
+  - `VAULT_TOKEN`
 
 ### `--help`
 
@@ -40,6 +50,22 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
               Query to execute
       -p, --params <PARAMS>
               Parameters to provide sanitarily to SQL query `--query`
+          --secret-store-engine <SECRET_STORE_ENGINE>
+              Secret storage service engine name [default: vault] [possible values: infisical, vault]
+      -a, --address <ADDRESS>
+              Secret storage service address [env: VAULT_ADDR=]
+          --ca-cert <CA_CERT>
+              Secret storage Certificate Authority (CA) certificate [env: VAULT_CACERT=]
+          --ca-path <CA_PATH>
+              Secret storage CA path [env: VAULT_CAPATH=]
+          --client-cert <CLIENT_CERT>
+              Secret storage client certificate [env: VAULT_CLIENT_CERT=]
+          --client-key <CLIENT_KEY>
+              Secret storage client key [env: VAULT_CLIENT_KEY=]
+          --skip-verify <SKIP_VERIFY>
+              Whether to skip verification on secret storage [env: VAULT_SKIP_VERIFY=] [possible values: true, false]
+          --token <TOKEN>
+              Secret storage service vault token [env: VAULT_TOKEN=]
       -h, --help
               Print help
       -V, --version
