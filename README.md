@@ -40,6 +40,12 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
     Options:
       -d, --data-source-name <DATA_SOURCE_NAME>
               DataSourceName
+          --hostname <HOSTNAME>
+              Hostname to connect with
+          --port <PORT>
+              Port to connect with
+          --database <DATABASE>
+              Database name to connect to
       -u, --username <USERNAME>
               Username to connect as
       -P, --password <PASSWORD>
@@ -66,8 +72,8 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
               Whether to skip verification on secret storage [env: VAULT_SKIP_VERIFY=] [possible values: true, false]
           --token <TOKEN>
               Secret storage service vault token [env: VAULT_TOKEN=]
-          --store-secret <STORE_SECRET>
-              Whether to store the provided `connection_string` in the secret store [possible values: true, false]
+          --store-secret
+              Whether to store the provided `connection_string` in the secret store
           --secret-mount <SECRET_MOUNT>
               mount of secret within secret storage engine
           --secret-path <SECRET_PATH>

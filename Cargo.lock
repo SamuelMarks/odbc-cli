@@ -1157,7 +1157,7 @@ dependencies = [
 [[package]]
 name = "odbc-secrets-lib"
 version = "0.0.1"
-source = "git+https://github.com/SamuelMarks/odbc-secrets-lib#4381cf2d4ee8603bcfedcb594086be7dd5ca00ec"
+source = "git+https://github.com/SamuelMarks/odbc-secrets-lib#428e2e04cefc5fe516f4a9669f1b2b25419045ac"
 dependencies = [
  "clap",
  "csv",

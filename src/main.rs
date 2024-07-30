@@ -70,6 +70,18 @@ struct Args {
     #[arg(short, long)]
     data_source_name: Option<String>,
 
+    /// Hostname to connect with
+    #[arg(long)]
+    hostname: Option<String>,
+
+    /// Port to connect with
+    #[arg(long)]
+    port: Option<u16>,
+
+    /// Database name to connect to
+    #[arg(long)]
+    database: Option<String>,
+
     /// Username to connect as
     #[arg(short, long)]
     username: Option<String>,
@@ -123,8 +135,8 @@ struct Args {
     token: Option<String>,
 
     /// Whether to store the provided `connection_string` in the secret store
-    #[arg(long)]
-    store_secret: Option<bool>,
+    #[arg(long, default_value_t = true)]
+    store_secret: bool,
 
     /// mount of secret within secret storage engine
     #[arg(long)] // default_value_t=Some("secret".to_string())
@@ -148,8 +160,14 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
     let mut args = Args::parse();
     let secret_mount = args.secret_mount.unwrap_or(String::from("secret"));
     let secret_path = args.secret_path.unwrap_or(String::from("odbc-conn"));
+
     if args.connection_string.is_none()
-        && (args.data_source_name.is_none() || args.username.is_none() || args.password.is_none())
+        && (args.data_source_name.is_none()
+            || args.hostname.is_none()
+            || args.port.is_none()
+            || args.database.is_none()
+            || args.username.is_none()
+            || args.password.is_none())
     {
         match args.secret_store_engine {
             SecretStoreEngine::VAULT => {
@@ -161,6 +179,7 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
                     "{} version {}",
                     args.secret_store_engine, vault_client.settings.version
                 ); */
+                // to be consistent this should be a map rather than `OdbcConnection`
                 let secret: OdbcConnection =
                     vaultrs::kv2::read(&vault_client, &secret_mount, &secret_path).await?;
                 args.connection_string = Some(secret.odbc_conn);
@@ -174,11 +193,25 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
             );
             return Err(clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument).into());
         }
-    } else if args.store_secret.unwrap_or(false) {
+    } else if args.store_secret {
         let vault_client = odbc_secrets_lib::secrets::vault_openbao::connect(
             args.address.expect("Specify secret service `--address`"),
             args.token.expect("Specify secret service `--token`"),
         )?;
+
+        if args.connection_string.is_none() {
+            let data_source_name = args.data_source_name.clone().unwrap();
+            let hostname = args.hostname.clone().unwrap();
+            let port = args.port.unwrap();
+            let database = args.database.clone().unwrap();
+            let username = args.username.clone().unwrap();
+            let password = args.password.clone().unwrap();
+            args.connection_string = Some(format!(
+                "Driver={{{}}};Server={};Port={};Database={};Uid={};Password={}",
+                data_source_name, hostname, port, database, username, password
+            ));
+        }
+
         let connection_string_struct = OdbcConnection {
             odbc_conn: args.connection_string.clone().unwrap(),
         };
@@ -190,6 +223,18 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
         )
         .await?;
     }
+    if args.connection_string.is_none() {
+        let data_source_name = args.data_source_name.clone().unwrap();
+        let hostname = args.hostname.clone().unwrap();
+        let port = args.port.unwrap();
+        let database = args.database.unwrap();
+        let username = args.username.unwrap();
+        let password = args.password.unwrap();
+        args.connection_string = Some(format!(
+            "Driver={{{}}};Server={};Port={};Database={};Uid={};Password={}",
+            data_source_name, hostname, port, database, username, password
+        ));
+    }
 
     if args.print_connection_str_and_exit {
         println!("{}", args.connection_string.unwrap());
@@ -198,9 +243,6 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
 
     Ok(odbc_secrets_lib::odbc_runner::odbc_runner(
         args.connection_string,
-        args.data_source_name,
-        args.username,
-        args.password,
         args.params,
         args.query,
         args.output_format,
