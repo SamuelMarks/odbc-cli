@@ -66,6 +66,16 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
               Whether to skip verification on secret storage [env: VAULT_SKIP_VERIFY=] [possible values: true, false]
           --token <TOKEN>
               Secret storage service vault token [env: VAULT_TOKEN=]
+          --store-secret <STORE_SECRET>
+              Whether to store the provided `connection_string` in the secret store [possible values: true, false]
+          --secret-mount <SECRET_MOUNT>
+              mount of secret within secret storage engine
+          --secret-path <SECRET_PATH>
+              path of secret within secret storage engine
+          --output-format <OUTPUT_FORMAT>
+              Output format for SQL query result [default: csv] [possible values: csv, json, parquet]
+          --print-connection-str-and-exit
+              Whether to just print the connection string and then exit
       -h, --help
               Print help
       -V, --version

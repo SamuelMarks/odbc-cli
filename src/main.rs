@@ -1,6 +1,7 @@
 mod error;
 
 use clap::{Parser, ValueEnum};
+use odbc_secrets_lib::odbc_runner::OutputFormat;
 
 use crate::error::OdbcSecretsCliError;
 
@@ -126,12 +127,20 @@ struct Args {
     store_secret: Option<bool>,
 
     /// mount of secret within secret storage engine
-    #[arg(long)] // default_value=("secret".to_string()))]
+    #[arg(long)] // default_value_t=Some("secret".to_string())
     secret_mount: Option<String>,
 
     /// path of secret within secret storage engine
-    #[arg(long)] // default_value=("odbc-conn".to_string()))]
+    #[arg(long)] // default_value=Some("odbc-conn".to_string())
     secret_path: Option<String>,
+
+    /// Output format for SQL query result
+    #[arg(long, default_value_t = Default::default())]
+    output_format: OutputFormat,
+
+    /// Whether to just print the connection string and then exit
+    #[arg(long, default_value_t = false)]
+    print_connection_str_and_exit: bool,
 }
 
 #[tokio::main]
@@ -156,7 +165,7 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
                     vaultrs::kv2::read(&vault_client, &secret_mount, &secret_path).await?;
                 args.connection_string = Some(secret.odbc_conn);
             }
-            SecretStoreEngine::INFISICAL => {}
+            SecretStoreEngine::INFISICAL => unimplemented!(),
         }
 
         if args.connection_string.is_none() {
@@ -182,6 +191,11 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
         .await?;
     }
 
+    if args.print_connection_str_and_exit {
+        println!("{}", args.connection_string.unwrap());
+        return Ok(());
+    }
+
     Ok(odbc_secrets_lib::odbc_runner::odbc_runner(
         args.connection_string,
         args.data_source_name,
@@ -189,5 +203,6 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
         args.password,
         args.params,
         args.query,
+        args.output_format,
     )?)
 }

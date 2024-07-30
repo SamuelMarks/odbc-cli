@@ -1157,8 +1157,9 @@ dependencies = [
 [[package]]
 name = "odbc-secrets-lib"
 version = "0.0.1"
-source = "git+https://github.com/SamuelMarks/odbc-secrets-lib#c5eb425eb4e0d57c19be2228e6bf6c17bbdaf49e"
+source = "git+https://github.com/SamuelMarks/odbc-secrets-lib#4381cf2d4ee8603bcfedcb594086be7dd5ca00ec"
 dependencies = [
+ "clap",
  "csv",
  "odbc-api",
  "serde_json",
@@ -1733,9 +1734,9 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "0.6.7"
+version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8fb9f64314842840f1d940ac544da178732128f1c78c21772e876579e0da1db"
+checksum = "0dd7358ecb8fc2f8d014bf86f6f638ce72ba252a2c3a2572f2a795f1d23efb41"
 
 [[package]]
 name = "toml_edit"
