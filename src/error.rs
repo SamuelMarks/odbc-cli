@@ -1,6 +1,8 @@
 use std::cmp::PartialEq;
 use std::string::ToString;
 
+use odbc_secrets_lib::error::OdbcSecretsLibError;
+
 #[derive(
     strum_macros::AsRefStr,
     strum_macros::Display,
@@ -37,6 +39,14 @@ impl From<odbc_secrets_lib::error::OdbcSecretsLibError> for OdbcSecretsCliError 
 impl From<clap::error::Error> for OdbcSecretsCliError {
     fn from(error: clap::error::Error) -> Self {
         Self::ClapError { error }
+    }
+}
+
+impl From<vaultrs::error::ClientError> for OdbcSecretsCliError {
+    fn from(error: vaultrs::error::ClientError) -> Self {
+        Self::OdbcSecretsLibError {
+            error: OdbcSecretsLibError::VaultClientError { error },
+        }
     }
 }
 

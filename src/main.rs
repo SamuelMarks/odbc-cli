@@ -4,7 +4,12 @@ use clap::{Parser, ValueEnum};
 
 use crate::error::OdbcSecretsCliError;
 
-// #[repr(C)]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct OdbcConnection {
+    odbc_conn: String,
+}
+
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 enum SecretStoreEngine {
     #[default]
@@ -115,21 +120,66 @@ struct Args {
     /// Secret storage service vault token
     #[arg(long, env = "VAULT_TOKEN")]
     token: Option<String>,
+
+    /// Whether to store the provided `connection_string` in the secret store
+    #[arg(long)]
+    store_secret: Option<bool>,
+
+    /// mount of secret within secret storage engine
+    #[arg(long)] // default_value=("secret".to_string()))]
+    secret_mount: Option<String>,
+
+    /// path of secret within secret storage engine
+    #[arg(long)] // default_value=("odbc-conn".to_string()))]
+    secret_path: Option<String>,
 }
 
-fn main() -> Result<(), OdbcSecretsCliError> {
-    let args = Args::parse();
+#[tokio::main]
+async fn main() -> Result<(), OdbcSecretsCliError> {
+    let mut args = Args::parse();
+    let secret_mount = args.secret_mount.unwrap_or(String::from("secret"));
+    let secret_path = args.secret_path.unwrap_or(String::from("odbc-conn"));
     if args.connection_string.is_none()
         && (args.data_source_name.is_none() || args.username.is_none() || args.password.is_none())
     {
-        /*odbc_secrets_lib::secrets::vault_openbao::connect(
-            env::var("VAULT_ADDR")
-        )*/
+        match args.secret_store_engine {
+            SecretStoreEngine::VAULT => {
+                let vault_client = odbc_secrets_lib::secrets::vault_openbao::connect(
+                    args.address.expect("Specify secret service `--address`"),
+                    args.token.expect("Specify secret service `--token`"),
+                )?;
+                /* println!(
+                    "{} version {}",
+                    args.secret_store_engine, vault_client.settings.version
+                ); */
+                let secret: OdbcConnection =
+                    vaultrs::kv2::read(&vault_client, &secret_mount, &secret_path).await?;
+                args.connection_string = Some(secret.odbc_conn);
+            }
+            SecretStoreEngine::INFISICAL => {}
+        }
 
-        eprintln!(
-            "Provide either `--conn` or all of `--data_source_name`, `--username`, `--password`"
-        );
-        return Err(clap::Error::new(clap::error::ErrorKind::ValueValidation).into());
+        if args.connection_string.is_none() {
+            eprintln!(
+                "Provide either `--conn` or all of `--data_source_name`, `--username`, `--password`"
+            );
+            return Err(clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument).into());
+        }
+    } else if args.store_secret.unwrap_or(false) {
+        let vault_client = odbc_secrets_lib::secrets::vault_openbao::connect(
+            args.address.expect("Specify secret service `--address`"),
+            args.token.expect("Specify secret service `--token`"),
+        )?;
+        let connection_string_struct = OdbcConnection {
+            odbc_conn: args.connection_string.clone().unwrap(),
+        };
+        vaultrs::kv2::set(
+            &vault_client,
+            &secret_mount,
+            &secret_path,
+            &connection_string_struct,
+        )
+        .await?;
     }
 
     Ok(odbc_secrets_lib::odbc_runner::odbc_runner(

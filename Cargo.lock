@@ -1147,13 +1147,17 @@ version = "0.0.1"
 dependencies = [
  "clap",
  "odbc-secrets-lib",
+ "serde",
+ "serde_json",
  "strum_macros",
+ "tokio",
+ "vaultrs",
 ]
 
 [[package]]
 name = "odbc-secrets-lib"
 version = "0.0.1"
-source = "git+https://github.com/SamuelMarks/odbc-secrets-lib#ea02f94ba771191939a8161357d97ed4d0cf3b4d"
+source = "git+https://github.com/SamuelMarks/odbc-secrets-lib#c5eb425eb4e0d57c19be2228e6bf6c17bbdaf49e"
 dependencies = [
  "csv",
  "odbc-api",
@@ -1689,7 +1693,19 @@ dependencies = [
  "mio",
  "pin-project-lite",
  "socket2",
+ "tokio-macros",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "693d596312e88961bc67d7f1f97af8a70227d9f90c31bba5806eec004978d752"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.72",
 ]
 
 [[package]]

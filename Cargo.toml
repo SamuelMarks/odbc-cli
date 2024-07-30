@@ -5,6 +5,10 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.11", features = ["derive", "env"] }
-# odbc-secrets-lib = { path = "../odbc-secrets-lib" }
 odbc-secrets-lib = { git = "https://github.com/SamuelMarks/odbc-secrets-lib" }
+# odbc-secrets-lib = { path = "../odbc-secrets-lib" }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.121"
 strum_macros = "0.26.4"
+tokio = { version = "1.0.0", features = ["rt", "rt-multi-thread", "macros"] }
+vaultrs = "0.7.2"
