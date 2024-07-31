@@ -20,6 +20,7 @@ enum SecretStoreEngine {
 
 impl SecretStoreEngine {
     /// Report all `possible_values`
+    #[allow(dead_code)]
     pub fn possible_values() -> impl Iterator<Item = clap::builder::PossibleValue> {
         Self::value_variants()
             .iter()
