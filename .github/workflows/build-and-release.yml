@@ -24,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: brew install unixodbc
+        if: matrix.os.name == 'macOS'
 # - run: cargo install cross --git https://github.com/cross-rs/cross && cross build
       - run: cargo build --release
       - run: mv "target/release/odbc-cli" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"

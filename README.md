@@ -1,5 +1,6 @@
 odbc-cli
 ========
+[![Build and release](https://github.com/SamuelMarks/odbc-cli/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/SamuelMarks/odbc-cli/actions/workflows/build-and-release.yml)
 
 Database abstracted CLI—using Open Database Connectivity (ODBC)—intended for basic and batch Create Read Update Delete (CRUD) operations, and negotiating database connection using a secret manager.
 
