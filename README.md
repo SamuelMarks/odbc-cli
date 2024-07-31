@@ -18,7 +18,7 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
 
     odbc-cli \
         --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
-        -q "SELECT atan(1)*4 AS pi"
+        -c "SELECT atan(1)*4 AS pi"
 
 ### Vault / OpenBao
 
@@ -51,11 +51,11 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
               Username to connect as
       -P, --password <PASSWORD>
               Password to connect with
-      -c, --conn <CONNECTION_STRING>
+          --conn <CONNECTION_STRING>
               Connect string to connect with. Takes precedence over `data_source_name`, `username`, `password`
-      -q, --query <QUERY>
+      -c, --command <COMMAND>
               Query to execute
-      -f, --query-file <QUERY_FILE>
+      -f, --command-file <COMMAND_FILE>
               Alternative query to execute from file or stdin
       -p, --params <PARAMS>
               Parameters to provide sanitarily to SQL query `--query`
@@ -85,6 +85,10 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
               Output format for SQL query result [default: csv] [possible values: csv, json, parquet]
           --print-connection-str-and-exit
               Whether to just print the connection string and then exit
+      -v, --verbose...
+              Increase logging verbosity
+      -q, --quiet...
+              Decrease logging verbosity
       -h, --help
               Print help
       -V, --version

@@ -92,16 +92,16 @@ struct Args {
     password: Option<String>,
 
     /// Connect string to connect with. Takes precedence over `data_source_name`, `username`, `password`.
-    #[arg(short, long = "conn")]
+    #[arg(long = "conn")]
     connection_string: Option<String>,
 
     /// Query to execute
     #[arg(short, long)]
-    query: Option<String>,
+    command: Option<String>,
 
     /// Alternative query to execute from file or stdin
     #[arg(short = 'f', long)]
-    query_file: Option<clap_stdin::FileOrStdin>,
+    command_file: Option<clap_stdin::FileOrStdin>,
 
     /// Parameters to provide sanitarily to SQL query `--query`
     #[arg(short, long)]
@@ -158,11 +158,20 @@ struct Args {
     /// Whether to just print the connection string and then exit
     #[arg(long, default_value_t = false)]
     print_connection_str_and_exit: bool,
+
+    #[command(flatten)]
+    verbose: clap_verbosity_flag::Verbosity,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), OdbcSecretsCliError> {
     let mut args = Args::parse();
+
+    simple_logger::SimpleLogger::new()
+        .with_level(args.verbose.log_level_filter())
+        .init()
+        .unwrap();
+
     let secret_mount = args.secret_mount.unwrap_or(String::from("secret"));
     let secret_path = args.secret_path.unwrap_or(String::from("odbc-conn"));
 
@@ -246,17 +255,17 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
         return Ok(());
     }
 
-    if args.query_file.is_none() && args.query.is_none() {
-        eprintln!("Provide either `--query-file` or `--query`");
+    if args.command_file.is_none() && args.command.is_none() {
+        eprintln!("Provide either `--command-file` or `--command`");
         return Err(clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument).into());
     }
 
     Ok(odbc_secrets_lib::odbc_runner::odbc_runner(
-        args.connection_string,
+        args.connection_string.unwrap(),
         args.params,
-        match args.query {
+        match args.command {
             Some(q) => q,
-            None => args.query_file.unwrap().contents()?,
+            None => args.command_file.unwrap().contents()?,
         },
         args.output_format,
     )?)
