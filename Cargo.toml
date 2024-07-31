@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.11", features = ["derive", "env"] }
+clap-stdin = { version = "0.5.1", features = ["clap"] }
 odbc-secrets-lib = { git = "https://github.com/SamuelMarks/odbc-secrets-lib", features = ["clap"] }
 # odbc-secrets-lib = { path = "../odbc-secrets-lib", features = ["clap"] }
 serde = { version = "1.0.204", features = ["derive"] }

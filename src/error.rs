@@ -22,6 +22,9 @@ pub enum OdbcSecretsCliError {
     // ************************
     #[strum(to_string = "`clap::error::Error` error. {error:?}")]
     ClapError { error: clap::error::Error } = 739,
+
+    #[strum(to_string = "`clap_stdin::StdinError` error. {error:?}")]
+    ClapStdin { error: clap_stdin::StdinError } = 744,
 }
 
 impl OdbcSecretsCliError {
@@ -39,6 +42,12 @@ impl From<odbc_secrets_lib::error::OdbcSecretsLibError> for OdbcSecretsCliError 
 impl From<clap::error::Error> for OdbcSecretsCliError {
     fn from(error: clap::error::Error) -> Self {
         Self::ClapError { error }
+    }
+}
+
+impl From<clap_stdin::StdinError> for OdbcSecretsCliError {
+    fn from(error: clap_stdin::StdinError) -> Self {
+        Self::ClapStdin { error }
     }
 }
 

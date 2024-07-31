@@ -247,6 +247,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-stdin"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "471df7896633bfc1e7d3da5b598422891e4cb8931210168ec63ea586e285803f"
+dependencies = [
+ "clap",
+ "thiserror",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1146,6 +1156,7 @@ name = "odbc-cli"
 version = "0.0.1"
 dependencies = [
  "clap",
+ "clap-stdin",
  "odbc-secrets-lib",
  "serde",
  "serde_json",

@@ -96,7 +96,11 @@ struct Args {
 
     /// Query to execute
     #[arg(short, long)]
-    query: String,
+    query: Option<String>,
+
+    /// Alternative query to execute from file or stdin
+    #[arg(short = 'f', long)]
+    query_file: Option<clap_stdin::FileOrStdin>,
 
     /// Parameters to provide sanitarily to SQL query `--query`
     #[arg(short, long)]
@@ -224,8 +228,8 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
         .await?;
     }
     if args.connection_string.is_none() {
-        let data_source_name = args.data_source_name.clone().unwrap();
-        let hostname = args.hostname.clone().unwrap();
+        let data_source_name = args.data_source_name.unwrap();
+        let hostname = args.hostname.unwrap();
         let port = args.port.unwrap();
         let database = args.database.unwrap();
         let username = args.username.unwrap();
@@ -241,10 +245,18 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
         return Ok(());
     }
 
+    if args.query_file.is_none() && args.query.is_none() {
+        eprintln!("Provide either `--query-file` or `--query`");
+        return Err(clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument).into());
+    }
+
     Ok(odbc_secrets_lib::odbc_runner::odbc_runner(
         args.connection_string,
         args.params,
-        args.query,
+        match args.query {
+            Some(q) => q,
+            None => args.query_file.unwrap().contents()?,
+        },
         args.output_format,
     )?)
 }

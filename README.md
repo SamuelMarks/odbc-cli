@@ -35,7 +35,7 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
 
     CLI for basic CRUD across many databases using ODBC
     
-    Usage: odbc-cli [OPTIONS] --query <QUERY>
+    Usage: odbc-cli [OPTIONS]
     
     Options:
       -d, --data-source-name <DATA_SOURCE_NAME>
@@ -54,6 +54,8 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
               Connect string to connect with. Takes precedence over `data_source_name`, `username`, `password`
       -q, --query <QUERY>
               Query to execute
+      -f, --query-file <QUERY_FILE>
+              Alternative query to execute from file or stdin
       -p, --params <PARAMS>
               Parameters to provide sanitarily to SQL query `--query`
           --secret-store-engine <SECRET_STORE_ENGINE>
