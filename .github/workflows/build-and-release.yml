@@ -29,3 +29,5 @@ jobs:
       - run: mv "target/release/odbc-cli" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
       - name: Release
         run: gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+        env:
+          GH_TOKEN: ${{ github.token }}
