@@ -1,0 +1,50 @@
+name: "Build and release"
+#on:
+#  push:
+#    tags:
+#      - '*'
+
+jobs:
+  build_linux:
+    name: cargo build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+# - run: cargo install cross --git https://github.com/cross-rs/cross && cross build
+      - run: cargo build --release
+      - run: mv "target/release/odbc-cli" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+
+  build_macos:
+    name: cargo build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo build --release
+      - run: mv "target/release/odbc-cli" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+
+  build_windows:
+    name: cargo build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo build --release
+      - run: move "target/release/odbc-cli" "target/release/odbc-cli-%RUNNER_OS%-%RUNNER_ARCH%"
+        shell: cmd
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
