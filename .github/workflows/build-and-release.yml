@@ -32,6 +32,7 @@ jobs:
           prefix=$(brew --prefix unixodbc)
           export LDFLAGS="-L${prefix}/lib"
           export CPPFLAGS="-I${prefix}/include"
+          mkdir -vp ~/{lib,include}
           ln -vs ${prefix}/lib/* ~/lib/
           ln -vs ${prefix}/include/* ~/include/
           cargo build --release
