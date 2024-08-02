@@ -38,7 +38,14 @@ jobs:
           cargo build --release
         if: matrix.os.name == 'macOS'
       - run: mv "target/release/odbc-cli" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+        if: matrix.os.name != 'Windows'
       - name: Release
         run: gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
         env:
           GH_TOKEN: ${{ github.token }}
+        if: matrix.os.name != 'Windows'
+      - name: Windows release
+        run: gh release upload "$GITHUB_REF_NAME" "odbc-cli.exe"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: matrix.os.name == 'Windows'
