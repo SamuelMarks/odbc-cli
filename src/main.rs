@@ -103,7 +103,7 @@ struct Args {
     #[arg(short = 'f', long)]
     command_file: Option<clap_stdin::FileOrStdin>,
 
-    /// Parameters to provide sanitarily to SQL query `--query`
+    /// Parameters to provide sanitarily to SQL query `--command`
     #[arg(short, long)]
     params: Option<String>,
 

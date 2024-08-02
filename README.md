@@ -8,21 +8,39 @@ Database abstracted CLI—using Open Database Connectivity (ODBC)—intended for
 
 ### Example
 
-Start an ODBC compatible database. For example, PostgreSQL with `docker`:
+Start an ODBC compatible database. For example, to start PostgreSQL with `docker`:
 
     docker run -p 5432:5432 -e POSTGRES_USER=rest_user -e POSTGRES_PASSWORD=rest_pass -e POSTGRES_DB=rest_db postgres:alpine
 
-(which will start and initialise a new PostgreSQL instance accessible via connection string `postgresql://rest_user:rest_pass@127.0.0.1:5432/rest_db`)
+(will start and initialise a new PostgreSQL instance accessible via connection string `postgresql://rest_user:rest_pass@127.0.0.1:5432/rest_db`)
 
-Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
+Now you can execute `odbc-cli` (or `cargo run -- --conn […]`):
 
     odbc-cli \
-        --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
-        -c "SELECT atan(1)*4 AS pi"
+      --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
+      -c "SELECT atan(1)*4 AS pi"
 
 ### Vault / OpenBao
 
-#### Environment variables
+To avoid explicitly providing credential information, you can use Vault / OpenBao.
+
+First, start or point to your secret store: [OpenBao](https://openbao.org) || [Hashicorp Vault](https://www.vaultproject.io) || [AWS Secret Engine](https://developer.hashicorp.com/vault/api-docs/secret/aws).
+
+For example, for **testing only**, after [installing `bao` (guide)](https://openbao.org/docs/install):
+
+    VAULT_TOKEN='dev-only-token'
+    bao server -dev -dev-root-token-id="$VAULT_TOKEN"
+
+(`docker run openbao/openbao` will do similar if you prefer Docker)
+
+Then you can populate the secret store like so:
+
+    odbc-cli \
+      --conn "Driver={PostgreSQL UNICODE};Server=localhost;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;" \
+      --store-secret \
+      -c "SELECT version();"
+
+#### Secret store environment variables
 
   - `VAULT_ADDR`
   - `VAULT_CACERT`
@@ -58,7 +76,7 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
       -f, --command-file <COMMAND_FILE>
               Alternative query to execute from file or stdin
       -p, --params <PARAMS>
-              Parameters to provide sanitarily to SQL query `--query`
+              Parameters to provide sanitarily to SQL query `--command`
           --secret-store-engine <SECRET_STORE_ENGINE>
               Secret storage service engine name [default: vault] [possible values: infisical, vault]
       -a, --address <ADDRESS>
@@ -96,6 +114,8 @@ Now you can execute `odbc-cli` (or `cargo run -- --conn …`):
 
 ---
 
+<small>
+
 ## Development guide
 
 ### Install Rust
@@ -131,3 +151,4 @@ $ cargo make
 ```
 
 Finally, we recommend [feature-branches](https://martinfowler.com/bliki/FeatureBranch.html) with an accompanying [pull-request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
+</small>
