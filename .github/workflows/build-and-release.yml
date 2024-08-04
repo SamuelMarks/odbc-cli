@@ -48,10 +48,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         if: matrix.os.name != 'Windows'
       - name: Windows release
-        run: |
-          dir  /s /b *.exe | findstr /v .exe.
-          where *.exe
-          gh release upload %GITHUB_REF_NAME% "%GITHUB_WORKSPACE%\target\release\odbc-cli.exe"
+        run: gh release upload %GITHUB_REF_NAME% "%GITHUB_WORKSPACE%\target\release\odbc-cli.exe"
         env:
           GH_TOKEN: ${{ github.token }}
         shell: cmd
