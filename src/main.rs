@@ -207,10 +207,10 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
             );
             return Err(clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument).into());
         }
-    } else if args.store_secret {
+    } else if args.store_secret && args.address.is_some() && args.token.is_some() {
         let vault_client = odbc_secrets_lib::secrets::vault_openbao::connect(
-            args.address.expect("Specify secret service `--address`"),
-            args.token.expect("Specify secret service `--token`"),
+            unsafe { args.address.unwrap_unchecked() },
+            unsafe { args.token.unwrap_unchecked() },
         )?;
 
         if args.connection_string.is_none() {

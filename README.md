@@ -4,6 +4,8 @@ odbc-cli
 
 Database abstracted CLI—using Open Database Connectivity (ODBC)—intended for basic and batch Create Read Update Delete (CRUD) operations, and negotiating database connection using a secret manager.
 
+NOTE: You may need to install `unixodbc` on macOS, Linux (though the provided `musl` binary has it statically linked), and others; and on Windows you may need to install the ODBC driver for your database. For example, PostgreSQL: https://www.postgresql.org/ftp/odbc/releases/
+
 ## Usage
 
 ### Example
@@ -136,6 +138,21 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh sh -s -- --defa
 ### Build and run project
 ```sh
 $ cargo run
+```
+
+### Docker
+```sh
+$ docker build . -t odbc-cli:latest
+```
+
+Then if you want to be fancy and get the executable out so it can be added to the releases:
+```sh
+$ docker save odbc-cli:latest -o odbc-cli.tar
+# Find and extract the binary, for example:
+$ odbc-cli.tar\blobs\sha256\7e3cb62b89edc58a47effa0f9a4e1fa792d3013911ab29f6bcbd6b60a64b5ffb\usr\local\bin\odbc-cli
+$ mv odbc-cli odbc-cli-x86_64-unknown-linux-musl
+# Upload this manually to the release or run
+$ gh release upload "tag-name" "odbc-cli-x86_64-unknown-linux-musl"
 ```
 
 ## Contribution guide
