@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         toolchain: [ nightly ]
-        target: [ x86_64-unknown-linux-gnu, x86_64-unknown-linux-musl ]
+        target: [ x86_64-unknown-linux-gnu ] #, x86_64-unknown-linux-musl ]
     #       target: [aarch64-unknown-linux-gnu, armv7-unknown-linux-gnueabihf, i686-unknown-linux-gnu, i686-unknown-linux-musl, mips-unknown-linux-gnu, mips64-unknown-linux-gnuabi64, mips64el-unknown-linux-gnuabi64, mipsel-unknown-linux-gnu, powerpc-unknown-linux-gnu, powerpc64-unknown-linux-gnu, powerpc64le-unknown-linux-gnu, arm-unknown-linux-gnueabi, x86_64-unknown-linux-gnu, x86_64-unknown-linux-musl]
     steps:
       - uses: awalsh128/cache-apt-pkgs-action@v1
@@ -74,9 +74,9 @@ jobs:
           # cargo install cross --git https://github.com/cross-rs/cross
           # cross build --target $TARGET --release 
           cargo build --target $TARGET --release
-          ls target/release
-          [[ "$TARGET" == 'x86_64-unknown-linux-gnu' ]] && gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
-          mv "target/release/odbc-cli-*" "target/release/odbc-cli-$TARGET"
+          ls -R
+          [[ "$TARGET" == 'x86_64-unknown-linux-gnu' ]] && gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli"*
+          mv "target/release/odbc-cli"* "target/release/odbc-cli-$TARGET"
           gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$TARGET"
         env:
           TARGET: ${{ matrix.target }}
