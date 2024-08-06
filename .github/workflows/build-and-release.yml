@@ -50,6 +50,7 @@ jobs:
         shell: cmd
         if: matrix.os.name == 'Windows'
   linux_multiarch:
+    name: "${{ matrix.toolchain }} ${{ matrix.target }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -74,6 +75,9 @@ jobs:
           # cross build --target $TARGET --release 
           cargo build --target $TARGET --release
           ls target/release
+          [[ "$TARGET" == 'x86_64-unknown-linux-gnu' ]] && gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$RUNNER_OS-$RUNNER_ARCH"
+          mv "target/release/odbc-cli-*" "target/release/odbc-cli-$TARGET"
           gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$TARGET"
         env:
           TARGET: ${{ matrix.target }}
+          GH_TOKEN: ${{ github.token }}
