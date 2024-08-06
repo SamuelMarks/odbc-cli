@@ -5,15 +5,12 @@ on:
       - '*'
 
 jobs:
-  build_release:
+  build_release_non_linux:
     name: ${{ matrix.os.name }}
     runs-on: ${{ matrix.os.runs-on }}
     strategy:
       matrix:
         os:
-          - name: Linux
-            runs-on: ubuntu-latest
-            python_platform: linux
           - name: Windows
             runs-on: windows-latest
             python_platform: win32
@@ -24,10 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-# - run: cargo install cross --git https://github.com/cross-rs/cross && cross build
-      - name: non-macOS build
+      - name: non macOS build
         run: cargo build --release
-        if: matrix.os.name != 'macOS'
+        if: matrix.os.name == 'Windows'
       - name: macOS build
         run: |
           brew install unixodbc
@@ -53,3 +49,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: cmd
         if: matrix.os.name == 'Windows'
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-unknown-linux-gnu, x86_64-unknown-linux-musl]
+#       target: [aarch64-unknown-linux-gnu, armv7-unknown-linux-gnueabihf, i686-unknown-linux-gnu, i686-unknown-linux-musl, mips-unknown-linux-gnu, mips64-unknown-linux-gnuabi64, mips64el-unknown-linux-gnuabi64, mipsel-unknown-linux-gnu, powerpc-unknown-linux-gnu, powerpc64-unknown-linux-gnu, powerpc64le-unknown-linux-gnu, arm-unknown-linux-gnueabi, x86_64-unknown-linux-gnu, x86_64-unknown-linux-musl]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+      - name: [ ${{ matrix.target }} ] Build and release
+        run: |
+          # cargo install cross --git https://github.com/cross-rs/cross
+          # cross build --target $TARGET --release 
+          cargo build --target $TARGET --release
+          ls target/release
+          gh release upload "$GITHUB_REF_NAME" "target/release/odbc-cli-$TARGET"
+        env:
+          TARGET: ${{ matrix.target }}
