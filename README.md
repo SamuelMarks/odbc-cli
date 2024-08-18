@@ -42,6 +42,8 @@ Then you can populate the secret store like so:
       --store-secret \
       -c "SELECT version();"
 
+(there's also a full Docker Compose example in the root of this repo)
+
 #### Secret store environment variables
 
   - `VAULT_ADDR`
@@ -143,6 +145,11 @@ $ cargo run
 ### Docker
 ```sh
 $ docker build . -t odbc-cli:latest
+```
+
+#### Docker Compose
+```sh
+$ docker compose up
 ```
 
 Then if you want to be fancy and get the executable out so it can be added to the releases:

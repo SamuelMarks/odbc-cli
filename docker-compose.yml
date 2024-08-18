@@ -1,0 +1,76 @@
+# Docker Compose implementation that does 4 things:
+# 0. PostgreSQL (+ a nice web interface on :8081)
+# 1. OpenBao
+# 2. Adds PostgreSQL connection string to OpenBao
+# 3. Uses connection string in execution of odbc-cli
+
+services:
+  db:
+    image: postgres:16.4-alpine
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: rest_user
+      POSTGRES_PASSWORD: rest_pass
+      POSTGRES_DB: rest_db
+
+  pgweb:
+    container_name: pgweb
+    restart: always
+    image: sosedoff/pgweb
+    ports:
+      - "8081:8081"
+    environment:
+      DATABASE_URL: postgres://rest_user:rest_pass@db:5432/rest_db?sslmode=disable
+    depends_on:
+      - db
+
+  openbao:
+    image: openbao/openbao:latest
+    environment:
+      SKIP_SETCAP: "true"
+      BAO_ADDR: http://127.0.0.1:8200
+      BAO_TOKEN: 4bf51a6e-5b4e-11ef-ab8f-3f98dcb265e3
+      BAO_DEV_ROOT_TOKEN_ID: 508b4080-5b4e-11ef-8bf6-8fddfd9aa406
+
+  add_secret:
+    image: alpine
+    command:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache curl wait4x &&
+        wait4x http "$$VAULT_ADDR" -- curl --header 'X-Vault-Token: '"$$VAULT_TOKEN" \
+                                           --header 'Content-Type: application/json' \
+                                           --request POST --data '{"data": {"odbc-conn": "'"$$ODBC_CONN"'"}}' \
+                                           "$$VAULT_ADDR"'/v1/secret/data/odbc-conn'
+    environment:
+      ODBC_CONN: "Driver={PostgreSQL UNICODE};Server=db;Port=5432;Database=rest_db;Uid=rest_user;Password=rest_pass;"
+      VAULT_ADDR: http://openbao:8200
+      VAULT_TOKEN: 508b4080-5b4e-11ef-8bf6-8fddfd9aa406
+    depends_on:
+      - openbao
+
+  test_conn_with_odbc_cli:
+    image: odbc-cli:latest
+#    build:
+#      context: .
+#      dockerfile: "alpine.Dockerfile"
+    depends_on:
+      - db
+      - openbao
+      - add_secret
+    entrypoint: [ "/bin/sh" ]
+    command:
+      - -c
+      - |
+        wait4x http --request-header 'X-Vault-Token: '"$$VAULT_TOKEN" \
+               "$$VAULT_ADDR"'/v1/secret/data/odbc-conn' \
+               --expect-status-code '200' \
+        -- \
+        odbc-cli -c 'SELECT version();'
+    environment:
+      VAULT_ADDR: http://openbao:8200
+      VAULT_TOKEN: 508b4080-5b4e-11ef-8bf6-8fddfd9aa406
+      # See, we don't need this line now:
+      #   DATABASE_URL: postgres://rest_user:rest_pass@db:5432/rest_db?sslmode=disable

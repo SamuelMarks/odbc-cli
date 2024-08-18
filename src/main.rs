@@ -5,11 +5,6 @@ use odbc_secrets_lib::odbc_runner::OutputFormat;
 
 use crate::error::OdbcSecretsCliError;
 
-#[derive(serde::Serialize, serde::Deserialize)]
-struct OdbcConnection {
-    odbc_conn: String,
-}
-
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 enum SecretStoreEngine {
@@ -189,14 +184,17 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
                     args.address.expect("Specify secret service `--address`"),
                     args.token.expect("Specify secret service `--token`"),
                 )?;
-                /* println!(
+                println!(
                     "{} version {}",
                     args.secret_store_engine, vault_client.settings.version
-                ); */
-                // to be consistent this should be a map rather than `OdbcConnection`
-                let secret: OdbcConnection =
+                );
+                let secret: std::collections::HashMap<String, String> =
                     vaultrs::kv2::read(&vault_client, &secret_mount, &secret_path).await?;
-                args.connection_string = Some(secret.odbc_conn);
+
+                args.connection_string = match secret.get(&secret_path) {
+                    None => None,
+                    Some(s) => Some(s.to_owned()),
+                };
             }
             SecretStoreEngine::INFISICAL => unimplemented!(),
         }
@@ -226,14 +224,16 @@ async fn main() -> Result<(), OdbcSecretsCliError> {
             ));
         }
 
-        let connection_string_struct = OdbcConnection {
-            odbc_conn: args.connection_string.clone().unwrap(),
-        };
+        let connection_string_obj = std::collections::HashMap::<String, String>::from([(
+            secret_path.to_owned(),
+            args.connection_string.clone().unwrap(),
+        )]);
+
         vaultrs::kv2::set(
             &vault_client,
             &secret_mount,
             &secret_path,
-            &connection_string_struct,
+            &connection_string_obj,
         )
         .await?;
     }
