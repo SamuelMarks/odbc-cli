@@ -1,5 +1,6 @@
 odbc-cli
 ========
+[![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build and release](https://github.com/SamuelMarks/odbc-cli/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/SamuelMarks/odbc-cli/actions/workflows/build-and-release.yml)
 
 Database abstracted CLI—using Open Database Connectivity (ODBC)—intended for basic and batch Create Read Update Delete (CRUD) operations, and negotiating database connection using a secret manager.
@@ -176,3 +177,21 @@ $ cargo make
 
 Finally, we recommend [feature-branches](https://martinfowler.com/bliki/FeatureBranch.html) with an accompanying [pull-request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 </small>
+
+<hr/>
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
+
